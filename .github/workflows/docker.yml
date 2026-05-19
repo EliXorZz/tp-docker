@@ -15,8 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set lowercase repository name
+        run: |
+          echo "REPO_OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build image
-        run: cd TP10 && docker build -t ghcr.io/${{ github.repository_owner }}/app:${{ github.sha }} .
+        run: cd TP10 && docker build -t ghcr.io/${{ env.REPO_OWNER }}/app:${{ github.sha }} .
 
       - name: Run tests
         run: cd TP10 && docker compose run --rm test
@@ -24,7 +28,7 @@ jobs:
       - name: Scan image (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/${{ github.repository_owner }}/app:${{ github.sha }}'
+          image-ref: 'ghcr.io/${{ env.REPO_OWNER }}/app:${{ github.sha }}'
           format: 'table'
           exit-code: '1'
           severity: 'CRITICAL'
@@ -32,7 +36,7 @@ jobs:
       - name: Generate SBOM
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-          trivy image --format cyclonedx --output sbom.json ghcr.io/${{ github.repository_owner }}/app:${{ github.sha }}
+          trivy image --format cyclonedx --output sbom.json ghcr.io/${{ env.REPO_OWNER }}/app:${{ github.sha }}
 
       - name: Upload SBOM as artifact
         uses: actions/upload-artifact@v4
@@ -43,4 +47,4 @@ jobs:
       - name: Push to GitHub Registry
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker push ghcr.io/${{ github.repository_owner }}/app:${{ github.sha }}
+          docker push ghcr.io/${{ env.REPO_OWNER }}/app:${{ github.sha }}
