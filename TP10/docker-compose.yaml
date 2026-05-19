@@ -1,0 +1,11 @@
+services:
+  test:
+    build: .
+    command: npm test
+  app:
+    build: .
+    environment:
+      - APP_ENV=dev
+      - PORT=3000
+    ports:
+      - "3000:3000"

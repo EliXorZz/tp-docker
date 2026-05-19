@@ -1,0 +1,7 @@
+services:
+  web:
+    image: harbor.server.dylanbattig.fr/mydigitalschool/nginx:ping
+    deploy:
+      replicas: 5
+    ports:
+      - "8080:80"
